@@ -9,7 +9,7 @@ Minimal path to awesome
 4. Run pip install -r ./requirements.txt
 
 5. When running for the first time uncomment:
-# nltk.download('punkt_tab')
-# nltk.download('stopwords')
+nltk.download('punkt_tab')
+nltk.download('stopwords')
 
 6. Run python main.py
