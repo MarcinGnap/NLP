@@ -57,6 +57,12 @@ embeddings = model.encode(df_sentences, convert_to_numpy=True)
 
 # Stratyfikowana walidacja krzyżowa (tak idę z komentarzami od dołu to nie piszę wszystkiego chyba)
 skf = StratifiedKFold(n_splits=5, shuffle=True)
+# one-vs-all ze stratified k-fold
+# ładowanie do .parquet
+# można ze stemmingiem i bez
+# w analizie senytmentu można dodać gatunek/tytuł/opis
+# jak dobrze pójdzie to można na konferencję
+# można potestować różne modele
 
 balanced_accuracies_first = []
 g_means_first = []
