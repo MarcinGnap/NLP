@@ -27,6 +27,12 @@ from test_data import print_results, k_fold_evaluation
 stop_words = set(stopwords.words('english'))
 stemmer = PorterStemmer()
 skf = StratifiedKFold(n_splits=5, shuffle=True)
+# one-vs-all ze stratified k-fold
+# ładowanie do .parquet
+# można ze stemmingiem i bez
+# w analizie senytmentu można dodać gatunek/tytuł/opis
+# jak dobrze pójdzie to można na konferencję
+# można potestować różne modele
 
 merged_df = load_n_merge_data()
 no_duplicates_df = df_cleanup_for_unmerged(merged_df)
