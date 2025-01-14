@@ -1,43 +1,53 @@
+######################################################################################################
+# bez łączenia cech
+######################################################################################################
+
 import pandas as pd
+from sklearn.metrics import balanced_accuracy_score, recall_score, f1_score
+from scipy.stats import gmean
+from sentence_transformers import SentenceTransformer
+from sklearn.preprocessing import LabelEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import classification_report
+from sklearn.model_selection import StratifiedKFold
 import numpy as np
-from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
-import nltk
-import spacy
-import string
+import pickle
+import os
+from load_n_prep_data import load_n_merge_data, encode_text_unmerged, df_cleanup_for_unmerged, df_cleanup_for_merged, encode_text_merged
+from test_data import print_results, k_fold_evaluation
+
 # nltk.download('punkt_tab')
 # nltk.download('stopwords')
-
-df1 = pd.read_csv('rotten_tomatoes_movies.csv')
-df2 = pd.read_csv('train.csv')
-df3 = pd.read_csv('rotten_tomatoes_movie_reviews.csv')
-
-rotten_merged = pd.merge(df1, df3, on='id', how='inner')
-rotten_merged = rotten_merged.drop_duplicates(subset='id', keep='first')
-df2.rename(columns={'movie_name': 'title'}, inplace=True)
-merged_df = pd.merge(rotten_merged, df2, on='title', how='inner')
-
-no_duplicates_df = merged_df.drop_duplicates(subset='title', keep='first').copy()
-
 stop_words = set(stopwords.words('english'))
 stemmer = PorterStemmer()
+skf = StratifiedKFold(n_splits=5, shuffle=True)
+# one-vs-all ze stratified k-fold
+# ładowanie do .parquet
+# można ze stemmingiem i bez
+# w analizie senytmentu można dodać gatunek/tytuł/opis
+# jak dobrze pójdzie to można na konferencję
+# można potestować różne modele
 
-if 'reviewText' in no_duplicates_df.columns:
-    def preprocess_text(text):
-        # na tokeny
-        tokens = word_tokenize(text)
-        # usuwanie interpunkcji
-        tokens = [token for token in tokens if token not in string.punctuation]
-        # stop worlds removal
-        tokens = [token for token in tokens if token.lower() not in stop_words]
-        # stemming
-        tokens = [stemmer.stem(token) for token in tokens]
-        return tokens
+merged_df = load_n_merge_data()
+no_duplicates_df = df_cleanup_for_unmerged(merged_df)
+y, embeddings = encode_text_unmerged(no_duplicates_df)
 
-    no_duplicates_df['tokenized_review'] = no_duplicates_df['reviewText'].astype(str).apply(preprocess_text)
-    print(no_duplicates_df[['title', 'reviewText', 'tokenized_review']].head())
-    print(no_duplicates_df)
-    no_duplicates_df.to_csv('new_database.csv', sep=',', encoding='utf-8')
-else:
-    print("Kolumna 'reviewText' nie istnieje w no_duplicates_df. Wybierz inną kolumnę do tokenizacji.")
+# Stratyfikowana walidacja krzyżowa (tak idę z komentarzami od dołu to nie piszę wszystkiego chyba)
+
+balanced_accuracies_first, g_means_first, f1_scores_first = k_fold_evaluation(y, embeddings, skf)
+
+# z łączeniem cech
+
+no_duplicates_df = df_cleanup_for_merged(merged_df)
+
+y, embeddings = encode_text_merged(no_duplicates_df)
+
+balanced_accuracies_second, g_means_second, f1_scores_second = k_fold_evaluation(y, embeddings, skf)
+
+print_results(balanced_accuracies_first, g_means_first, f1_scores_first, balanced_accuracies_second, g_means_second, f1_scores_second)
