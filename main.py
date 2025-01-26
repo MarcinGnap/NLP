@@ -13,7 +13,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import classification_report
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import RepeatedStratifiedKFold
 import numpy as np
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
@@ -31,7 +31,7 @@ warnings.filterwarnings('ignore')
 # nltk.download('stopwords')
 # stop_words = set(stopwords.words('english'))
 # stemmer = PorterStemmer()
-skf = StratifiedKFold(n_splits=5, shuffle=True)
+skf = RepeatedStratifiedKFold(n_splits=5, n_repeats=10)
 # one-vs-all ze stratified k-fold
 # ładowanie do .parquet
 # można ze stemmingiem i bez
@@ -65,6 +65,9 @@ embeddings_s = load_from_npy('npy_files/sentiment_embeddings_unmerged')
 embeddings_m = load_from_npy('npy_files/genre_embeddings_merged')
 embeddings_sm = load_from_npy('npy_files/sentiment_embeddings_merged')
 
-classifier = GaussianNB()
-print_results(*k_fold_evaluation(y, embeddings, skf, classifier), *k_fold_evaluation(y_m, embeddings_m, skf, classifier))
-print_results(*k_fold_evaluation(y_s, embeddings_s, skf, classifier), *k_fold_evaluation(y_sm, embeddings_sm, skf, classifier))
+clfs = {"gnb": GaussianNB(), "knn": KNeighborsClassifier(), "dtc": DecisionTreeClassifier(), "log": LogisticRegression(), "svc": SVC()}
+
+for name, clf in clfs.items():
+    genre_unmerged, genre_merged = print_results(*k_fold_evaluation(y, embeddings, skf, clf), *k_fold_evaluation(y_m, embeddings_m, skf, clf))
+    sentiment_unmerged, sentiment_merged = print_results(*k_fold_evaluation(y_s, embeddings_s, skf, clf), *k_fold_evaluation(y_sm, embeddings_sm, skf, clf))
+    save_all_to_files('./results/', genre_unmerged, genre_merged, sentiment_unmerged, sentiment_merged, name)

@@ -5,10 +5,6 @@ from pandas import DataFrame
 from sklearn.preprocessing import LabelEncoder
 from sentence_transformers import SentenceTransformer
 import numpy as np
-from sklearn.metrics import balanced_accuracy_score, recall_score, f1_score
-from sklearn.naive_bayes import GaussianNB
-from scipy.stats import gmean
-
 
 def load_n_merge_data() -> DataFrame:
     df1 = pd.read_csv('csv/rotten_tomatoes_movies.csv')
@@ -79,6 +75,6 @@ def save_to_npy(arr: np.ndarray, name: str):
     np.save(name, arr)
 
 
-def load_from_npy(name: str) ->np.ndarray:
+def load_from_npy(name: str) -> np.ndarray:
     arr = np.load(f'{name}.npy')
     return arr
