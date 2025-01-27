@@ -13,20 +13,25 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import classification_report
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import RepeatedStratifiedKFold
 import numpy as np
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
-import pickle
 import os
-from load_n_prep_data import load_n_merge_data, encode_text_unmerged, df_cleanup_for_unmerged, df_cleanup_for_merged, encode_text_merged
+
+from transformers.models.cvt.convert_cvt_original_pytorch_checkpoint_to_pytorch import embeddings
+
+from load_n_prep_data import load_n_merge_data, encode_text_unmerged, df_cleanup_for_unmerged, df_cleanup_for_merged, \
+    encode_text_merged, save_to_npy, load_from_npy
 from test_data import print_results, k_fold_evaluation
+import warnings
+warnings.filterwarnings('ignore')
 
 # nltk.download('punkt_tab')
 # nltk.download('stopwords')
-stop_words = set(stopwords.words('english'))
-stemmer = PorterStemmer()
-skf = StratifiedKFold(n_splits=5, shuffle=True)
+# stop_words = set(stopwords.words('english'))
+# stemmer = PorterStemmer()
+skf = RepeatedStratifiedKFold(n_splits=5, n_repeats=10)
 # one-vs-all ze stratified k-fold
 # ładowanie do .parquet
 # można ze stemmingiem i bez
@@ -36,18 +41,33 @@ skf = StratifiedKFold(n_splits=5, shuffle=True)
 
 merged_df = load_n_merge_data()
 no_duplicates_df = df_cleanup_for_unmerged(merged_df)
-y, embeddings = encode_text_unmerged(no_duplicates_df)
+# y, embeddings = encode_text_unmerged(no_duplicates_df, 'genre') #genre, sentiment
+# save_to_npy(embeddings, 'npy_files/genre_embeddings_unmerged')
+# save_to_npy(y, 'npy_files/genre_labels_unmerged')
+# y_s, embeddings_s = encode_text_unmerged(no_duplicates_df, 'sentiment')
+# save_to_npy(embeddings_s, 'npy_files/sentiment_embeddings_unmerged')
+# save_to_npy(y_s, 'npy_files/sentiment_labels_unmerged')
+# y_m, embeddings_s = encode_text_merged(no_duplicates_df, 'genre')
+# save_to_npy(embeddings, 'npy_files/genre_embeddings_merged')
+# save_to_npy(y, 'npy_files/genre_labels_merged')
+# y_sm, embeddings_sm = encode_text_merged(no_duplicates_df, 'sentiment')
+# save_to_npy(embeddings_sm, 'npy_files/sentiment_embeddings_merged')
+# save_to_npy(y_sm, 'npy_files/sentiment_labels_merged')
+# no_duplicates_df_merged = df_cleanup_for_merged(merged_df)
 
-# Stratyfikowana walidacja krzyżowa (tak idę z komentarzami od dołu to nie piszę wszystkiego chyba)
+y = load_from_npy('npy_files/genre_labels_unmerged')
+y_s = load_from_npy('npy_files/sentiment_labels_unmerged')
+y_m = load_from_npy('npy_files/genre_labels_merged')
+y_sm = load_from_npy('npy_files/sentiment_labels_merged')
 
-balanced_accuracies_first, g_means_first, f1_scores_first = k_fold_evaluation(y, embeddings, skf)
+embeddings = load_from_npy('npy_files/genre_embeddings_unmerged')
+embeddings_s = load_from_npy('npy_files/sentiment_embeddings_unmerged')
+embeddings_m = load_from_npy('npy_files/genre_embeddings_merged')
+embeddings_sm = load_from_npy('npy_files/sentiment_embeddings_merged')
 
-# z łączeniem cech
+clfs = {"gnb": GaussianNB(), "knn": KNeighborsClassifier(), "dtc": DecisionTreeClassifier(), "log": LogisticRegression(), "svc": SVC()}
 
-no_duplicates_df = df_cleanup_for_merged(merged_df)
-
-y, embeddings = encode_text_merged(no_duplicates_df)
-
-balanced_accuracies_second, g_means_second, f1_scores_second = k_fold_evaluation(y, embeddings, skf)
-
-print_results(balanced_accuracies_first, g_means_first, f1_scores_first, balanced_accuracies_second, g_means_second, f1_scores_second)
+for name, clf in clfs.items():
+    genre_unmerged, genre_merged = print_results(*k_fold_evaluation(y, embeddings, skf, clf), *k_fold_evaluation(y_m, embeddings_m, skf, clf))
+    sentiment_unmerged, sentiment_merged = print_results(*k_fold_evaluation(y_s, embeddings_s, skf, clf), *k_fold_evaluation(y_sm, embeddings_sm, skf, clf))
+    save_all_to_files('./results/', genre_unmerged, genre_merged, sentiment_unmerged, sentiment_merged, name)

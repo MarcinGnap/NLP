@@ -31,3 +31,6 @@ venv/
 /node_modules/
 
 .idea/
+/csv
+/npy_files
+/results
