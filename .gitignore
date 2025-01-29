@@ -33,4 +33,5 @@ venv/
 .idea/
 /csv
 /npy_files
+/res
 /results

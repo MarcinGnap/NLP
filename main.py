@@ -1,12 +1,3 @@
-######################################################################################################
-# bez łączenia cech
-######################################################################################################
-
-import pandas as pd
-from sklearn.metrics import balanced_accuracy_score, recall_score, f1_score
-from scipy.stats import gmean
-from sentence_transformers import SentenceTransformer
-from sklearn.preprocessing import LabelEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.neighbors import KNeighborsClassifier
@@ -14,16 +5,17 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import classification_report
 from sklearn.model_selection import RepeatedStratifiedKFold
-import numpy as np
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
-import os
-# from transformers.models.cvt.convert_cvt_original_pytorch_checkpoint_to_pytorch import embeddings
+
 from load_n_prep_data import load_n_merge_data, encode_text_unmerged, df_cleanup_for_unmerged, df_cleanup_for_merged, \
     encode_text_merged, save_to_npy, load_from_npy, init_load
 from test_data import print_results, k_fold_evaluation, save_all_to_files
 import warnings
 warnings.filterwarnings('ignore')
+# TODO - one-vs-all
+# TODO - test with stemming also
+# TODO - genre/title etc in sentiment prediction
 import nltk
 
 INIT_RUN = False
@@ -35,12 +27,6 @@ if INIT_RUN:
 # stop_words = set(stopwords.words('english'))
 # stemmer = PorterStemmer()
 skf = RepeatedStratifiedKFold(n_splits=5, n_repeats=10)
-# one-vs-all ze stratified k-fold
-# ładowanie do .parquet
-# można ze stemmingiem i bez
-# w analizie senytmentu można dodać gatunek/tytuł/opis
-# jak dobrze pójdzie to można na konferencję
-# można potestować różne modele
 
 merged_df = load_n_merge_data()
 no_duplicates_df = df_cleanup_for_unmerged(merged_df)
