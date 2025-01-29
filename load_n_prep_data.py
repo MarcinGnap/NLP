@@ -78,3 +78,18 @@ def save_to_npy(arr: np.ndarray, name: str):
 def load_from_npy(name: str) -> np.ndarray:
     arr = np.load(f'{name}.npy')
     return arr
+
+def init_load(no_duplicates_df, merged_df):
+    y, embeddings = encode_text_unmerged(no_duplicates_df, 'genre') #genre, sentiment
+    save_to_npy(embeddings, 'npy_files/genre_embeddings_unmerged')
+    save_to_npy(y, 'npy_files/genre_labels_unmerged')
+    y_s, embeddings_s = encode_text_unmerged(no_duplicates_df, 'sentiment')
+    save_to_npy(embeddings_s, 'npy_files/sentiment_embeddings_unmerged')
+    save_to_npy(y_s, 'npy_files/sentiment_labels_unmerged')
+    y_m, embeddings_s = encode_text_merged(no_duplicates_df, 'genre')
+    save_to_npy(embeddings, 'npy_files/genre_embeddings_merged')
+    save_to_npy(y, 'npy_files/genre_labels_merged')
+    y_sm, embeddings_sm = encode_text_merged(no_duplicates_df, 'sentiment')
+    save_to_npy(embeddings_sm, 'npy_files/sentiment_embeddings_merged')
+    save_to_npy(y_sm, 'npy_files/sentiment_labels_merged')
+    return df_cleanup_for_merged(merged_df)
