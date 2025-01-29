@@ -18,17 +18,20 @@ import numpy as np
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 import os
-
-from transformers.models.cvt.convert_cvt_original_pytorch_checkpoint_to_pytorch import embeddings
-
+# from transformers.models.cvt.convert_cvt_original_pytorch_checkpoint_to_pytorch import embeddings
 from load_n_prep_data import load_n_merge_data, encode_text_unmerged, df_cleanup_for_unmerged, df_cleanup_for_merged, \
-    encode_text_merged, save_to_npy, load_from_npy
+    encode_text_merged, save_to_npy, load_from_npy, init_load
 from test_data import print_results, k_fold_evaluation, save_all_to_files
 import warnings
 warnings.filterwarnings('ignore')
+import nltk
 
-# nltk.download('punkt_tab')
-# nltk.download('stopwords')
+INIT_RUN = False
+
+
+if INIT_RUN:
+    nltk.download('punkt_tab')
+    nltk.download('stopwords')
 # stop_words = set(stopwords.words('english'))
 # stemmer = PorterStemmer()
 skf = RepeatedStratifiedKFold(n_splits=5, n_repeats=10)
@@ -41,19 +44,9 @@ skf = RepeatedStratifiedKFold(n_splits=5, n_repeats=10)
 
 merged_df = load_n_merge_data()
 no_duplicates_df = df_cleanup_for_unmerged(merged_df)
-# y, embeddings = encode_text_unmerged(no_duplicates_df, 'genre') #genre, sentiment
-# save_to_npy(embeddings, 'npy_files/genre_embeddings_unmerged')
-# save_to_npy(y, 'npy_files/genre_labels_unmerged')
-# y_s, embeddings_s = encode_text_unmerged(no_duplicates_df, 'sentiment')
-# save_to_npy(embeddings_s, 'npy_files/sentiment_embeddings_unmerged')
-# save_to_npy(y_s, 'npy_files/sentiment_labels_unmerged')
-# y_m, embeddings_s = encode_text_merged(no_duplicates_df, 'genre')
-# save_to_npy(embeddings, 'npy_files/genre_embeddings_merged')
-# save_to_npy(y, 'npy_files/genre_labels_merged')
-# y_sm, embeddings_sm = encode_text_merged(no_duplicates_df, 'sentiment')
-# save_to_npy(embeddings_sm, 'npy_files/sentiment_embeddings_merged')
-# save_to_npy(y_sm, 'npy_files/sentiment_labels_merged')
-# no_duplicates_df_merged = df_cleanup_for_merged(merged_df)
+
+if INIT_RUN:
+    no_duplicates_df_merged = init_load(no_duplicates_df, merged_df)
 
 y = load_from_npy('npy_files/genre_labels_unmerged')
 y_s = load_from_npy('npy_files/sentiment_labels_unmerged')
